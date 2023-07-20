@@ -3,16 +3,19 @@
 set -eu
 set -o pipefail
 
-cd "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")"
+cd -- "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")"
 
-mkdir -p pdf/
+rm -rf -- pdf/
+mkdir -- pdf/
 
-for dir in ./presentations/*; do
-    [[ -d "${dir}" ]] &&
-        (
-            cd -- "${dir}"
-            pdflatex -shell-escape -- main.tex
-            rm -fr -- *.aux *.log *.nav *.out *.snm *.toc *.vrb _minted-main/
-            mv -- main.pdf "../../pdf/$(basename -- "${dir}").pdf"
-        )
+for file in ./presentations/*; do
+    pandoc \
+        -s \
+        -f markdown+yaml_metadata_block \
+        -t beamer \
+        -M date="$(date +%d/%m/%Y)" \
+         --slide-level 2 \
+        "${file}" \
+        -o pdf/"$(basename -- "${file}" .md).pdf"
 done
+
